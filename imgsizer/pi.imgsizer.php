@@ -400,6 +400,7 @@ class Imgsizer {
 					$image = imagecreatefromgif($file);
 					break;
 				case IMAGETYPE_JPEG:
+					imageinterlace($image_resized, true);
 					$image = imagecreatefromjpeg($file);
 					break;
 				case IMAGETYPE_PNG:
