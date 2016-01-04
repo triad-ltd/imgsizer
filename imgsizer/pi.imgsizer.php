@@ -393,7 +393,8 @@ class Imgsizer {
 		}
 
 		if ($img['do_cache']) {
-
+			$image_resized = imagecreatetruecolor($final_width, $final_height);
+			
 			switch (
 					$info[2]) {
 				case IMAGETYPE_GIF:
@@ -409,8 +410,6 @@ class Imgsizer {
 				default:
 					return false;
 			}
-
-			$image_resized = imagecreatetruecolor($final_width, $final_height);
 
 			if (($info[2] == IMAGETYPE_GIF) || ($info[2] == IMAGETYPE_PNG)) {
 				$trnprt_indx = imagecolortransparent($image);
