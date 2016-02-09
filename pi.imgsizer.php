@@ -3,7 +3,7 @@
 // still here for EE2 support
 $plugin_info = array(
     'pi_name' => 'ImageSizer',
-    'pi_version' => '3.0.0',
+    'pi_version' => '3.0.1',
     'pi_author' => 'David Rencher, Christian Maloney, Roger Hughes, Stephen Sweetland',
     'pi_author_url' => 'http://www.lumis.com/',
     'pi_description' => 'Image Resizer - resizes and caches images',
@@ -72,8 +72,6 @@ class Imgsizer {
         $base_path = reduce_double_slashes($base_path);
         $img['base_path'] = $base_path;
 
-        $remote = (!$this->EE->TMPL->fetch_param('remote')) ? '' : $this->EE->TMPL->fetch_param('remote');
-
         $cache = (!$this->EE->TMPL->fetch_param('cache')) ? '' : $this->EE->TMPL->fetch_param('cache');
 
         $refresh = (!$this->EE->TMPL->fetch_param('refresh')) ? '1440' : $this->EE->TMPL->fetch_param('refresh');
@@ -89,7 +87,10 @@ class Imgsizer {
         // -------------------------------------
         // extract necessities from full URL
         // -------------------------------------
+        $remote = false;
+
         if (stristr($src, 'http')) {
+            $remote = true;
             $img['url_src'] = $src; // save the URL src for remote
             $urlarray = parse_url($img['url_src']);
             $img['url_host_cache_dir'] = str_replace('.', '-', $urlarray['host']);
@@ -571,31 +572,27 @@ class Imgsizer {
 
     }
 
-// -------------------------------------
+    // -------------------------------------
     // This function does remote image fetch
     // -------------------------------------
     function do_remote($img) {
 
-        $src = (!$this->EE->TMPL->fetch_param('image')) ? (!$this->EE->TMPL->fetch_param('src') ? '' : $this->EE->TMPL->fetch_param('src')):$this->EE->TMPL->fetch_param('image');
-        $src = str_replace(SLASH, "/", $src); // clean up passed src param
         $refresh = (!$this->EE->TMPL->fetch_param('refresh')) ? '1440' : $this->EE->TMPL->fetch_param('refresh');
 
         $remote_user = (!$this->EE->TMPL->fetch_param('remote_user')) ? '' : $this->EE->TMPL->fetch_param('remote_user');
         $remote_pass = (!$this->EE->TMPL->fetch_param('remote_pass')) ? '' : $this->EE->TMPL->fetch_param('remote_pass');
 
-        $url_filename = parse_url($img['src']);
+        $url_filename = parse_url($img['url_src']);
         $url_filename = pathinfo($url_filename['path']);
 
         $base_cache = reduce_double_slashes($img['base_path'] . "/images/sized/");
         $base_cache = (!$this->EE->TMPL->fetch_param('base_cache')) ? $base_cache : $this->EE->TMPL->fetch_param('base_cache');
         $base_cache = reduce_double_slashes($base_cache);
-
         $save_mask = str_replace('/', '-', $url_filename['dirname']);
         $save_name = $img['url_host_cache_dir'] . $save_mask . "-" . $url_filename['basename'];
 
-        $save_root_folder = $base_cache . "remote";
+        $save_root_folder = $base_cache . "/remote";
         $save_root_path = $save_root_folder . "/" . $save_name;
-
         $save_rel_path = $base_cache . "/remote/" . $save_name;
         $save_rel_path = "/" . str_replace($img['base_path'], '', $save_rel_path);
         $save_rel_path = reduce_double_slashes($save_rel_path);
@@ -610,16 +607,15 @@ class Imgsizer {
             }
         }
 
-        // check the sorce and the cache file
-        //error_reporting(0);
-
-        $remote_diff = round((time() - filectime($save_root_path)) / 60) - 9;
-        //$this->EE->TMPL->log_item($remote_diff);
+        $remote_diff = $refresh + 1;
+        if (file_exists($save_root_path)) {
+            $remote_diff = round((time() - filectime($save_root_path)) / 60) - 9;
+        }
 
         if ($remote_diff > $refresh) {
 
             $ch = curl_init();
-            curl_setopt($ch, CURLOPT_URL, $src);
+            curl_setopt($ch, CURLOPT_URL, $img['url_src']);
             if ($remote_pass) {
                 curl_setopt($ch, CURLOPT_USERPWD, $remote_user . ":" . $remote_pass);
             }
@@ -642,9 +638,6 @@ class Imgsizer {
             $this->file_put_contents_atomic($save_root_path, $file_contents);
 
             $this->EE->TMPL->log_item("imgsizer.remote.did_fetch: yes");
-            foreach ($curl_info as $key => $value) {
-                $this->EE->TMPL->log_item("imgsizer.remote.curl." . $key . ": " . $value);
-            }
 
         }
 
@@ -701,86 +694,84 @@ class Imgsizer {
         ob_start();
         ?>
 The ImageSizer plugin will resize any JPG, GIF or PNG image to the size specified
-        and cache the resized image to the cache folder.
+and cache the resized image to the cache folder.
 
-        If you update the original image a new resized version will be created.
-
-        =============================
-        The Tag
-        =============================
-
-        {exp:imgsizer:size src="/images/news/moped.jpg" width="100"}
-               <img src="{sized}" width="{width}" height="{height}" />
-               <div style="background-image:url({sized}); width:{width}px; height:{height}px;"></div>
-        {/exp:imgsizer:size}
+If you update the original image a new resized version will be created. 
 
 
-        ==============
-        TAG PARAMETERS
-        ==============
+# History
 
-        src=
-            [REQUIRED]
-            the relitive path to the image or the URL to the image.
-            /images/news/moped.jpg  or  http://www.lumis.com/images/news/moped.jpg
-          -------------------
+Originally from [http://devot-ee.com/add-ons/image-sizer](http://devot-ee.com/add-ons/image-sizer) and then forked from [https://github.com/ctmaloney/imgsizer](https://github.com/ctmaloney/imgsizer)
+
+---
+
+# The Tag
 
 
-        width=
-            the width you wish the image resized to. The height is resized proportionately.
-            [OR]
-        height=
-            the height you wish the image resized to. The width is resized proportionately.
-            [OR]
-        auto=
-            the size of the longest side. If the image is landscape, then this sets the width, else it sets the height.
+    {exp:imgsizer:size src="/images/news/moped.jpg" width="100"}
+      <img src="{sized}" width="{width}" height="{height}" />
+      <div style="background-image:url({sized}); width:{width}px; height:{height}px;"></div>
+    {/exp:imgsizer:size}
 
-            NOTE:
-            - if you use only width or only height the image will be scaled to match that width or height proportionately.
-            - if you use auto, image will be scaled to the longest side proportionately.
-            - if you use both width and height the image will be cropped from center to that width and height.
-            - if "width" is = to "height" the image will be cropped from image center to make a square sized image.
-         -------------------
+---
 
+# Tag Parameters
 
-        quality=
-            [OPTIONAL]
-            only used if image is JPG
-            ranges from 0 (worst quality, smaller file) to 100 (best quality, biggest file). The default is the default value is (100).
-            -------------------
+**auto=** [OPTIONAL]
 
-        greyscale=
-            [OPTIONAL]
-            if set to yes imagesizer will convert color images to greyscale
-            -------------------
+the size of the longest side. If the image is landscape, then this sets the width, else it sets the height.
 
+**autoheight=** [OPTIONAL] 
 
-        base_path=
-            [OPTIONAL]
-             by default the base_path is set by ExpressionEngine to your webroot you may override this by altering this value to something like "/web/htdocs/lumis.com/"
-             -------------------
+The height the img should be adjusted to fit. When using this parameter use the 'width' parameter as a max width to control when the image will be cropped.  If the resized width is greater than the given width the image will be cropped, if less it will be left alone.  This setting is very useful for creating image galleries where portrait images should only be resized not cropped.
 
-        base_cache=
-            [OPTIONAL]
-            the base cache folder is where all your cache images are stored within sub directories of your base cache folder by default it is "/web/htdocs/lumis.com/images/sized/" you can change this to anything you wish as long as it points to a folder structure in your sites document root
-            -------------------
+**base_cache=** [OPTIONAL] 
 
-        cache =
-            [for testing]
-            allows you to turn off image caching (not a good idea) setting this to "no" means your images will be reprocessed everytime the page is loaded (caching is on by default)
-            -------------------
+the base cache folder is where all your cache images are stored within sub directories of your base cache folder by default it is "/web/htdocs/lumis.com/images/sized/" you can change this to anything you wish as long as it points to a folder structure in your sites document root 
 
-        ------------------
-        TROUBLESHOOTING:
-        ------------------
+**base_path=** [OPTIONAL]
 
-        All error messages are logged in the Template Parsing Log.  If you have no output, or unexpected output, enable the Template Parsing Log in your Output and Debugging Preferences.
+by default the base_path is set by ExpressionEngine to your webroot you may override this by altering this value to something like "/web/htdocs/lumis.com/" 
 
-        Even though this tag has its own caching mechanism, do not forget that you can further increase performance by using Tag Caching: http://expressionengine.com/docs/general/caching.html#tag_caching
+**cache=** [OPTIONAL]
 
+allows you to turn off image caching (not a good idea) setting this to "no" means your images will be reprocessed everytime the page is loaded (caching is on by default)
 
+**greyscale=** [OPTIONAL]
 
+if set to yes imagesizer will convert color images to greyscale
+    
+**height=** [OPTIONAL] 
 
+the height you wish the image resized to. The width is resized proportionately.
+
+**quality=** [OPTIONAL]
+
+only used if image is JPG ranges from 0 (worst quality, smaller file) to 100 (best quality, biggest file). The default is the default value is (100).
+
+**remote_pass=** [OPTIONAL]
+HTTP Auth credential used for retrieving a remote file.
+
+**remote_user=** [OPTIONAL]
+HTTP Auth credential used for retrieving a remote file.
+
+**src=** [REQUIRED] 
+
+the relative path to the image or the URL to the image. /images/news/moped.jpg  or  http://www.lumis.com/images/news/moped.jpg
+
+**width=** [OPTIONAL] 
+
+the width you wish the image resized to. The height is resized proportionately.
+
+NOTE:
+* if you use only width or only height the image will be scaled to match that width or height proportionately. 
+* if you use auto, image will be scaled to the longest side proportionately. 
+* if you use both width and height the image will be cropped from center to that width and height.
+* if "width" is = to "height" the image will be cropped from image center to make a square sized image.
+
+# Troubleshooting:
+
+All error messages are logged in the Template Parsing Log.  If you have no output, or unexpected output, enable the Template Parsing Log in your Output and Debugging Preferences.
 <?php
 $buffer = ob_get_contents();
 

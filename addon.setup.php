@@ -2,7 +2,7 @@
 
 return array(
     'name'              => 'ImageSizer',
-    'version'           => '3.0.0',
+    'version'           => '3.0.1',
     'author'            => 'David Rencher, Christian Maloney, Roger Hughes, Stephen Sweetland',
     'author_url'        => 'https://github.com/meatpaste/imgsizer',
     'description'       => 'Image Resizer - resizes and caches images',
