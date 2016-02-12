@@ -18,16 +18,27 @@ class Imgsizer {
     function __construct() {
         $this->EE = &get_instance();
         $this->EE->load->helper('string');
+        $this->tag_vars = '';
     }
 
     // still here for EE2 support
     function Imgsizer() {
         $this->EE = &get_instance();
         $this->EE->load->helper('string');
+        $this->tag_vars = '';
     }
     // end still here
 
     function size() {
+        // --------------------------------------------------
+        //  Set any output tag vars
+        // --------------------------------------------------
+        $this->tag_vars .= (!$this->EE->TMPL->fetch_param('alt')) ? '' : ' alt="'.$this->EE->TMPL->fetch_param('alt').'"';
+        $this->tag_vars .= (!$this->EE->TMPL->fetch_param('class')) ? '' : ' class="'.$this->EE->TMPL->fetch_param('class').'"';
+        $this->tag_vars .= (!$this->EE->TMPL->fetch_param('id')) ? '' : ' id="'.$this->EE->TMPL->fetch_param('id').'"';
+        $this->tag_vars .= (!$this->EE->TMPL->fetch_param('style')) ? '' : ' style="'.$this->EE->TMPL->fetch_param('style').'"';
+        $this->tag_vars .= (!$this->EE->TMPL->fetch_param('title')) ? '' : ' title="'.$this->EE->TMPL->fetch_param('title').'"';
+
         // --------------------------------------------------
         //  Determine base path
         // --------------------------------------------------
@@ -55,15 +66,6 @@ class Imgsizer {
         $src = str_replace(SLASH, "/", $src); // clean up passed src param
         $src = rawurldecode($src); // Pass raw url string to imgsizer else it will fail on invalid characters
 
-        // -------------------------------------
-        // Did User pass a full img tag..  shame shame.. lets fix that
-        // -------------------------------------
-        if (stristr($src, '<img')) {
-            $src = str_replace("\\", "", $src);
-            $src = preg_match_all('/src="(.+?)"/is', $src, $this->url);
-            $src = $this->url[1][0];
-        }
-
         /*debug*/
         $this->EE->TMPL->log_item("imgsizer.user.src: " . $src);
 
@@ -89,7 +91,7 @@ class Imgsizer {
         // -------------------------------------
         $remote = false;
 
-        if (stristr($src, 'http')) {
+        if (substr($src, 0, 4) == 'http') {
             $remote = true;
             $img['url_src'] = $src; // save the URL src for remote
             $urlarray = parse_url($img['url_src']);
@@ -183,36 +185,51 @@ class Imgsizer {
             return $this->EE->TMPL->no_results();
         }
 
-        // -------------------------------------
-        // do the sizing math
-        // -------------------------------------
-        $img = $this->get_some_sizes($img);
+        $img['greyscale'] = (!$this->EE->TMPL->fetch_param('greyscale')) ? '' : $this->EE->TMPL->fetch_param('greyscale');
 
-        // -------------------------------------
-        // check the cache
-        // -------------------------------------
-        $img = $this->check_some_cache($img);
-
-        // -------------------------------------
-        // do the sizing if needed
-        // -------------------------------------
-        $img = $this->do_some_image($img);
-
-        /*debug*/
-        foreach ($img as $key => $value) {
-            $this->EE->TMPL->log_item("imgsizer.img[" . $key . "]: " . $value);
+        if (strtolower($this->EE->TMPL->fetch_param('responsive')) == 'yes') {
+            $responsive_sizes = array(320, 768, 992, 1920);
+            $svgout = array();
+            foreach($responsive_sizes as $rs) {
+                $img['auto'] = '';
+                $img['autoheight'] = '';
+                $img['target_height'] = '9000';
+                $img['target_width'] = $rs;
+                $img['quality'] = 85;
+                // do the sizing math
+                $img = $this->get_some_sizes($img);
+                // check the cache
+                $img = $this->check_some_cache($img);
+                // do the sizing if needed
+                $img = $this->do_some_image($img);
+                $svgout[] = $img;
+            }
+            return $this->do_output_svg($svgout);
+        } else {
+            $img['auto'] = (!$this->EE->TMPL->fetch_param('auto')) ? '' : $this->EE->TMPL->fetch_param('auto');
+            $img['autoheight'] = (!$this->EE->TMPL->fetch_param('autoheight')) ? '' : $this->EE->TMPL->fetch_param('autoheight');
+            $img['quality'] = (!$this->EE->TMPL->fetch_param('quality')) ? '100' : $this->EE->TMPL->fetch_param('quality');
+            $img['target_height'] = (!$this->EE->TMPL->fetch_param('height')) ? '9000' : $this->EE->TMPL->fetch_param('height');
+            $img['target_width'] = (!$this->EE->TMPL->fetch_param('width')) ? '9000' : $this->EE->TMPL->fetch_param('width');
+            // do the sizing math
+            $img = $this->get_some_sizes($img);
+            // check the cache
+            $img = $this->check_some_cache($img);
+            // do the sizing if needed
+            $img = $this->do_some_image($img);
+            /*debug*/
+            foreach ($img as $key => $value) {
+                $this->EE->TMPL->log_item("imgsizer.img[" . $key . "]: " . $value);
+            }
+            // do the output
+            return $this->do_output($img);
         }
 
-        // -------------------------------------
-        // do the output
-        // -------------------------------------
-        return $this->do_output($img);
     }
 
-// -------------------------------------
+    // -------------------------------------
     // This function calculates how the image should be resized / cropped etc.
     // -------------------------------------
-
     function get_some_sizes($img) {
 
         // set some defaults
@@ -222,10 +239,10 @@ class Imgsizer {
         $img['proportional'] = true;
         $color_space = "";
 
-        $auto = (!$this->EE->TMPL->fetch_param('auto')) ? '' : $this->EE->TMPL->fetch_param('auto');
-        $max_width = (!$this->EE->TMPL->fetch_param('width')) ? '9000' : $this->EE->TMPL->fetch_param('width');
-        $max_height = (!$this->EE->TMPL->fetch_param('height')) ? '9000' : $this->EE->TMPL->fetch_param('height');
-        $greyscale = (!$this->EE->TMPL->fetch_param('greyscale')) ? '' : $this->EE->TMPL->fetch_param('greyscale');
+        $auto = $img['auto'];
+        $max_width = $img['target_width'];
+        $max_height = $img['target_height'];
+        $greyscale = $this->EE->TMPL->fetch_param('greyscale') == 'yes' ? true : false;
 
         if ($greyscale) {
             $color_space = "-greyscale";
@@ -287,7 +304,7 @@ class Imgsizer {
             $img['out_height'] = $max_height;
         }
 
-        $auto_height = (!$this->EE->TMPL->fetch_param('autoheight')) ? '' : $this->EE->TMPL->fetch_param('autoheight');
+        $auto_height = $img['autoheight'];
         if ($auto_height) {
             $auto_height_factor = $auto_height / $height;
             $img['out_height'] = round($height * $auto_height_factor);
@@ -304,7 +321,7 @@ class Imgsizer {
         return $img;
     }
 
-// -------------------------------------
+    // -------------------------------------
     // checks cached images if they are present
     // and if they are older than the src img
     // -------------------------------------
@@ -326,7 +343,7 @@ class Imgsizer {
         return $img;
     }
 
-// -------------------------------------
+    // -------------------------------------
     // This function does the image resizing
     // -------------------------------------
     function do_some_image($img) {
@@ -338,9 +355,8 @@ class Imgsizer {
         $proportional = $img['proportional'];
         $output = $img['cache_path'] . $img['out_name'];
 
-        $quality = (!$this->EE->TMPL->fetch_param('quality')) ? '100' : $this->EE->TMPL->fetch_param('quality');
-        $quality = "100";
-        $greyscale = (!$this->EE->TMPL->fetch_param('greyscale')) ? '' : $this->EE->TMPL->fetch_param('greyscale');
+        $quality = $img['quality'];
+        $greyscale = $img['greyscale'];
 
         if ($height <= 0 && $width <= 0) {
             return false;
@@ -500,29 +516,12 @@ class Imgsizer {
 
     function do_output($img) {
 
-        $alt = (!$this->EE->TMPL->fetch_param('alt')) ? '' : $this->EE->TMPL->fetch_param('alt');
-        $style = (!$this->EE->TMPL->fetch_param('style')) ? '' : $this->EE->TMPL->fetch_param('style');
-        $class = (!$this->EE->TMPL->fetch_param('class')) ? '' : $this->EE->TMPL->fetch_param('class');
-        $title = (!$this->EE->TMPL->fetch_param('title')) ? '' : $this->EE->TMPL->fetch_param('title');
-        $id = (!$this->EE->TMPL->fetch_param('id')) ? '' : $this->EE->TMPL->fetch_param('id');
-        $justurl = (!$this->EE->TMPL->fetch_param('justurl')) ? '' : $this->EE->TMPL->fetch_param('justurl');
-        $server_domain = (!$this->EE->TMPL->fetch_param('server_domain')) ? '' : $this->EE->TMPL->fetch_param('server_domain');
-
-        $browser_out_path = str_replace(SLASH, "/", $server_domain) . $img['browser_out_path'];
-        $img['browser_out_path'] = reduce_double_slashes($browser_out_path);
-
-        /** -------------------------------------
-        /*  sometimes we may just want the path to the image e.g. RSS feeds
-        /** -------------------------------------*/
-        if ($justurl) {
-            return $img['browser_out_path'];
-        }
-
         /** -------------------------------------
         /*  is the tag in a pair if so do that
         /** -------------------------------------*/
 
         $tagdata = $this->EE->TMPL->tagdata;
+
         $tagdata = $this->EE->functions->prep_conditionals($tagdata, $this->EE->TMPL->var_single);
 
         if ($tagdata) {
@@ -551,25 +550,64 @@ class Imgsizer {
                 }
             }
             return $tagdata;
+        } else {
+    
+            /** -------------------------------------
+            /*  output just a simple img tag
+            /** -------------------------------------*/
+            return '<img src="' . $img['browser_out_path'] . '" width="' . $img['out_width'] . '" height="' . $img['out_height'] . '"' . $this->tag_vars . ' />';
+            
         }
 
-        /** -------------------------------------
-        /*  this is the default output just a simpe img tag
-        /** -------------------------------------*/
-        $out_tag = "<img src=\"" . $img['browser_out_path'] . "\" width=\"" . $img['out_width'] . "\" height=\"" . $img['out_height'] . "\" ";
+    }
 
-        $out_tag .= ($id ? " id=\"$id\"" : "");
+    function do_output_svg($svgout) {
+        $svgfilename = $svgout[0]['base_filename'].'.svg';
+        $svgpath = $svgout[0]['cache_path'].$svgfilename;
 
-        $out_tag .= ($title ? " title=\"$title\"" : "");
+        $out = "<svg xmlns=\"http://www.w3.org/2000/svg\" 
+            viewBox=\"0 0 ".$svgout[count($svgout)-1]['out_width']." ".$svgout[count($svgout)-1]['out_height']."\" 
+            preserveAspectRatio=\"xMidYMid meet\">
+            <title>Clown Car Technique</title>
+                <style>
+                    svg {
+                        background-size: 100% 100%;
+                        background-repeat: no-repeat;
+                        background-image: url(".$svgout[0]['out_name'].");
+                        height: auto;
+                    }
+            ";
 
-        $out_tag .= ($alt ? " alt=\"$alt\"" : " alt=\"\"");
+            $w = '';
+            foreach($svgout as $svg) {
+                if ($w == '') {
+                    $w = $svgout[0]['target_width']+1;
+                    continue;
+                }
+                $out .= "
+                @media (min-width: ".$w."px) {
+                    svg {background-image: url(".$svg['out_name'].");}
+                }
+                ";
+                $w = $svg['target_width']+1;
+            }
 
-        $out_tag .= ($class ? " class=\"$class\"" : "");
+            $out.= "</style></svg>";
 
-        $out_tag .= ($style ? " style=\"$style\"" : "");
+        file_put_contents($svgpath, $out);
+        
+        $outimg = array(
+            'browser_out_path' => reduce_double_slashes("/" . str_replace($svgout[0]['base_path'], '', $svgout[0]['cache_path'])) . $svgfilename,
+            'out_width' => $svgout[count($svgout)-1]['out_width'],
+            'out_height'    => $svgout[count($svgout)-1]['out_height'],
+            'src_width' => $svgout[count($svgout)-1]['src_width'],
+            'src_height'    => $svgout[count($svgout)-1]['src_height'],
+        );
 
-        return $out_tag . " />";
-
+        return '<object data="' . $outimg['browser_out_path'] . '" 
+            width="' . $outimg['out_width'] . '" 
+            height="' . $outimg['out_height'] . '"
+            '.$this->tag_vars.'></object>';
     }
 
     // -------------------------------------
@@ -672,7 +710,7 @@ class Imgsizer {
 
     }
 
-//Creates yiq function
+    //Creates yiq function
     function yiq($r, $g, $b) {
         return (($r * 0.299) + ($g * 0.587) + ($b * 0.114));
     }
@@ -713,6 +751,8 @@ Originally from [http://devot-ee.com/add-ons/image-sizer](http://devot-ee.com/ad
       <div style="background-image:url({sized}); width:{width}px; height:{height}px;"></div>
     {/exp:imgsizer:size}
 
+alternatively leave the tag empty and the script will output an image tag for you.
+
 ---
 
 # Tag Parameters
@@ -737,6 +777,10 @@ by default the base_path is set by ExpressionEngine to your webroot you may over
 
 allows you to turn off image caching (not a good idea) setting this to "no" means your images will be reprocessed everytime the page is loaded (caching is on by default)
 
+**class=, alt=, id=, style=, title=** [OPTIONAL]
+
+pass through html parameters, when the imgsizer tag is empty the auto generated output will include these parameters.
+
 **greyscale=** [OPTIONAL]
 
 if set to yes imagesizer will convert color images to greyscale
@@ -750,10 +794,16 @@ the height you wish the image resized to. The width is resized proportionately.
 only used if image is JPG ranges from 0 (worst quality, smaller file) to 100 (best quality, biggest file). The default is the default value is (100).
 
 **remote_pass=** [OPTIONAL]
+
 HTTP Auth credential used for retrieving a remote file.
 
 **remote_user=** [OPTIONAL]
+
 HTTP Auth credential used for retrieving a remote file.
+
+**responsive=(yes/no)** [OPTIONAL]
+
+Create several smaller copies of the image and serve them to the end user by embedding in a SVG container using media queries. (NOT compatible with IE8!)
 
 **src=** [REQUIRED] 
 
