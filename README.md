@@ -18,6 +18,8 @@ Originally from [http://devot-ee.com/add-ons/image-sizer](http://devot-ee.com/ad
       <div style="background-image:url({sized}); width:{width}px; height:{height}px;"></div>
     {/exp:imgsizer:size}
 
+alternatively leave the tag empty and the script will output an image tag for you.
+
 ---
 
 # Tag Parameters
@@ -42,6 +44,10 @@ by default the base_path is set by ExpressionEngine to your webroot you may over
 
 allows you to turn off image caching (not a good idea) setting this to "no" means your images will be reprocessed everytime the page is loaded (caching is on by default)
 
+**class=, alt=, id=, style=, title=** [OPTIONAL]
+
+pass through html parameters, when the imgsizer tag is empty the auto generated output will include these parameters.
+
 **greyscale=** [OPTIONAL]
 
 if set to yes imagesizer will convert color images to greyscale
@@ -53,6 +59,18 @@ the height you wish the image resized to. The width is resized proportionately.
 **quality=** [OPTIONAL]
 
 only used if image is JPG ranges from 0 (worst quality, smaller file) to 100 (best quality, biggest file). The default is the default value is (100).
+
+**remote_pass=** [OPTIONAL]
+
+HTTP Auth credential used for retrieving a remote file.
+
+**remote_user=** [OPTIONAL]
+
+HTTP Auth credential used for retrieving a remote file.
+
+**responsive=(yes/no)** [OPTIONAL]
+
+Create several smaller copies of the image and serve them to the end user by embedding in a SVG container using media queries. (NOT compatible with IE8!)
 
 **src=** [REQUIRED] 
 
