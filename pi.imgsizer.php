@@ -671,9 +671,7 @@ class Imgsizer {
                 curl_close($ch);
             }
 
-            define("FILE_PUT_CONTENTS_ATOMIC_TEMP", $save_dir);
-            define("FILE_PUT_CONTENTS_ATOMIC_MODE", 0777);
-            $this->file_put_contents_atomic($save_root_path, $file_contents);
+            $this->file_put_contents_atomic($save_root_path, $file_contents, $save_dir, 0777);
 
             $this->EE->TMPL->log_item("imgsizer.remote.did_fetch: yes");
 
@@ -685,11 +683,11 @@ class Imgsizer {
 
     }
 
-    function file_put_contents_atomic($filename, $content) {
+    function file_put_contents_atomic($filename, $content, $temp_path, $file_mode) {
 
-        $temp = tempnam(FILE_PUT_CONTENTS_ATOMIC_TEMP, 'temp');
+        $temp = tempnam($temp_path, 'temp');
         if (!($f = @fopen($temp, 'wb'))) {
-            $temp = FILE_PUT_CONTENTS_ATOMIC_TEMP . DIRECTORY_SEPARATOR . uniqid('temp');
+            $temp = $temp_path . DIRECTORY_SEPARATOR . uniqid('temp');
             if (!($f = @fopen($temp, 'wb'))) {
                 trigger_error("file_put_contents_atomic() : error writing temporary file '$temp'", E_USER_WARNING);
                 return false;
@@ -704,7 +702,7 @@ class Imgsizer {
             @rename($temp, $filename);
         }
 
-        @chmod($filename, FILE_PUT_CONTENTS_ATOMIC_MODE);
+        @chmod($filename, $file_mode);
 
         return true;
 
