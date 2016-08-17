@@ -1,11 +1,11 @@
-<?php 
+<?php
 
 return array(
-    'name'              => 'ImageSizer',
-    'version'           => '3.0.1',
-    'author'            => 'David Rencher, Christian Maloney, Roger Hughes, Stephen Sweetland',
+    'author'            => 'Roger Hughes, David Rencher, Christian Maloney, Stephen Sweetland',
     'author_url'        => 'https://github.com/meatpaste/imgsizer',
-    'description'       => 'Image Resizer - resizes and caches images',
+    'description'       => 'Image resizer - resize images and create placeholders',
+    'name'              => 'ImageSizer',
     'namespace'         => 'Ellislab\Addons\Imgsizer',
     'settings_exist'    => FALSE,
+    'version'           => '4.0.1',
 );
