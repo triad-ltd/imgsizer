@@ -6,7 +6,7 @@ $plugin_info = array( // EE2 support
     'pi_description' => 'Image resizer - resize images and create placeholders',
     'pi_name' => 'ImageSizer',
     'pi_usage' => Imgsizer::usage(),
-    'pi_version' => '4.0.1',
+    'pi_version' => '4.0.2',
 );
 
 class Imgsizer {
@@ -244,6 +244,8 @@ class Imgsizer {
             }
 
             $outImage = imagecreatetruecolor($this->output['width'], $this->output['height']);
+            imagealphablending($outImage, false);
+            imagesavealpha($outImage, true);
             imagecopyresampled($outImage, $inImage, 0, 0, 0, 0, $this->output['width'], $this->output['height'], $this->input['width'], $this->input['height']);
 
             // save to disk

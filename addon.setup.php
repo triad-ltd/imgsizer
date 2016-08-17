@@ -7,5 +7,5 @@ return array(
     'name'              => 'ImageSizer',
     'namespace'         => 'Ellislab\Addons\Imgsizer',
     'settings_exist'    => FALSE,
-    'version'           => '4.0.1',
+    'version'           => '4.0.2',
 );
