@@ -4,6 +4,7 @@ class Imgsizer_ext {
 
 	var $name = 'Imgsizer';
 	var $version = '4.1.0';
+	var $settings_exists = 'n';
 
 	function channel_entries_tagdata_end($tagdata, $row)
 	{
