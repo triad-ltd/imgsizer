@@ -4,8 +4,8 @@ class Imgsizer_upd {
 
 	var $version = '4.1.0';
 
-    function install()
-    {
+	function install()
+	{
 		// install the module
 		ee()->db->insert('modules', array(
 			'module_name' => 'Imgsizer',
@@ -21,6 +21,17 @@ class Imgsizer_upd {
 			'enabled' => 'Y',
 		));
 
+		// add hook reference
+		$data = array(
+			'class'		=> 'Imgsizer_ext',
+			'method'	=> 'channel_entries_tagdata_end',
+			'hook'		=> 'channel_entries_tagdata_end',
+			'priority'	=> 10,
+			'version'	=> $this->version,
+			'enabled'	=> 'y'
+		);
+		ee()->db->insert('extensions', $data);
+
 		// replace the image button with our button in the
 		// rte toll set
 		$sql = "UPDATE exp_rte_toolsets
@@ -33,17 +44,22 @@ class Imgsizer_upd {
 		ee()->db->query($sql);
 
 		return true;
-    }
+	}
 
 	function uninstall()
 	{
 		// delete the module
-		ee()->db->delete('modules',array(
+		ee()->db->delete('modules', array(
 			'module_name' => 'Imgsizer',
 		));
 
+		// delete hook
+		ee()->db->delete('extensions', array(
+			'class' => 'Imgsizer_ext',
+		));
+
 		// delete RTE button
-		ee()->db->delete('rte_tools',array(
+		ee()->db->delete('rte_tools', array(
 			'name' => 'Imgsizer',
 		));
 
