@@ -31,6 +31,7 @@ ImgSizerOverlay.prototype = {
 			},
 			resize: function() {
 				var width = prompt(imgsizer_width_message, foo.$current.children('img').css('width').replace('px',''));
+				foo.$current.attr('data-width', width);
 				foo.$current.children('img').css('width', width);
 			}
 		}
