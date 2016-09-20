@@ -29,10 +29,9 @@ Class Imgsizer_rte {
 
 	function libraries()
 	{
-		return array(
-			'plugin' => 'ee_filebrowser',
-			'ui'     => 'dialog'
-		);
+		$fp = new FilePicker();
+		$fp->inject(ee()->view);
+		return array();
 	}
 
 	function styles()
