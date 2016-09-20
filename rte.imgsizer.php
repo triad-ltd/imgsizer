@@ -16,8 +16,8 @@ Class Imgsizer_rte {
 		$fp = new FilePicker();
 
 		return array(
-			'rte.imgsizer.label' => 'ImgSizer',
-			'rte.imgsizer.title' => 'ImgSizer',
+			'rte.imgsizer.label' => 'Imgsizer',
+			'rte.imgsizer.title' => 'Imgsizer',
 			'rte.imgsizer.url' =>  ee('CP/URL')->make($fp->controller, array('directory' => 'all'))->compile()
 		);
 	}

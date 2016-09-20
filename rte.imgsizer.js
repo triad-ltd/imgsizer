@@ -14,7 +14,6 @@ function ImgSizerOverlay($editor) {
 
 ImgSizerOverlay.prototype = {
 	_actions: function() {
-		console.log('act');
 		var foo = this;
 
 		return {
@@ -51,7 +50,6 @@ ImgSizerOverlay.prototype = {
 			$(this).addClass('imgsizer-dragging');
 		});
 		this.$editor.on('dragstart', 'figure img', function(e) {
-			console.log(e.target);
 			foo.$toolbar.detach();
 			foo.$tmp = $(this).parent().clone();
 		});
@@ -84,7 +82,6 @@ ImgSizerOverlay.prototype = {
 		button.click(function(e) {
 			e.preventDefault();
 			foo._actions()[$name]();
-			console.log('clicked');
 		});
 		button.mouseover(function(e) {
 			e.preventDefault();
