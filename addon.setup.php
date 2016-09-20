@@ -5,7 +5,7 @@ return array(
     'author_url'        => 'https://github.com/meatpaste/imgsizer',
     'description'       => 'Image resizer - resize images and create placeholders',
     'name'              => 'ImageSizer',
-    'namespace'         => 'Ellislab\Addons\Imgsizer',
+    'namespace'         => 'Meatpaste\Imgsizer',
     'settings_exist'    => FALSE,
-    'version'           => '4.0.2',
+    'version'           => '4.1.0',
 );

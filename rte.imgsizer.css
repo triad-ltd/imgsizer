@@ -1,0 +1,34 @@
+.toolbar li.rte-imgsizer a:before {
+    content: '\\f0ed';
+}
+figure.imgsizer-figure {
+	margin: 0;
+	padding: 8px;
+	position: relative;
+}
+ul.imgsizer-toolbar {
+	display: block;
+    position: absolute;
+    top: 0;
+    left: calc(50% - 100px);
+    z-index: 100;
+    width: 200px;
+	padding: 0;
+}
+.imgsizer-toolbar li {
+	display: inline-block;
+	list-style: none;
+}
+.imgsizer-toolbar a {
+	background-color: white;
+	background-color: rgba(255,255,255,0.6);
+	border: 1px solid black;
+	color: black;
+	display: block;
+	font-family: 'fontawesome';
+	font-size: 22px;
+	width: 20px;
+	height: 20px;
+	padding: 8px;
+	text-decoration: none;
+}

@@ -1,13 +1,4 @@
-<?php if (!defined('BASEPATH')) exit('No direct script access allowed');
-
-$plugin_info = array( // EE2 support
-    'pi_author' => 'Roger Hughes, David Rencher, Christian Maloney, Stephen Sweetland',
-    'pi_author_url' => 'http://clicked.me.uk/',
-    'pi_description' => 'Image resizer - resize images and create placeholders',
-    'pi_name' => 'ImageSizer',
-    'pi_usage' => Imgsizer::usage(),
-    'pi_version' => '4.0.2',
-);
+<?php  if ( ! defined('BASEPATH')) exit('No direct script access allowed');
 
 class Imgsizer {
 
@@ -57,7 +48,6 @@ class Imgsizer {
         $this->output = array();
         $this->settings = array();
 
-
         // set document root folder
         if (array_key_exists('DOCUMENT_ROOT', $_ENV)) {
             $this->settings['root_path'] = reduce_double_slashes($_ENV['DOCUMENT_ROOT'] . "/");
@@ -83,7 +73,6 @@ class Imgsizer {
         if ($this->EE->TMPL->fetch_param('cache_url') != '') {
             $this->settings['cache_url'] = $this->EE->TMPL->fetch_param('cache_url');
         }
-
 
         // fetch vars from the tag
         $this->settings['color'] = (!$this->EE->TMPL->fetch_param('color')) ? '000000' : $this->EE->TMPL->fetch_param('color');
