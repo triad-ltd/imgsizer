@@ -97,9 +97,13 @@ WysiHat.addButton('imgsizer_rte', {
 	title: EE.rte.imgsizer.title,
     label: EE.rte.imgsizer.label,
 	init: function(name, $editor) {
+		var foo = this;
 		this.$editor = $editor.data('wysihat');
 		new ImgSizerOverlay($editor);
 
+		$editor.on('click', function(){
+			foo.saved_ranges = foo.Commands.getRanges();
+		});
 		return this.parent.init(name, $editor);
 	},
 	handler: function (state, finalize) {
@@ -107,7 +111,6 @@ WysiHat.addButton('imgsizer_rte', {
 		var html = '';
 
 		this.finalize = finalize; // need this for undo support
-		this.saved_ranges = this.Commands.getRanges();
 
 		if (!foo.$element.hasClass('m-link')) {
 			// add FilePicker properties to button
@@ -143,7 +146,7 @@ WysiHat.addButton('imgsizer_rte', {
 						if (title == '') title = imgsizer_default_link_title;
 						$out = $('<a />', { href: data.path }).html(title);
 					}
-					$('.WysiHat-editor').focus();
+					foo.$editor.focus();
 					foo.Commands.restoreRanges(foo.saved_ranges);
 					foo.saved_ranges[0].insertNode( $out.get(0) );
 					foo.finalize(); // need this for undo support
