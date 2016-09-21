@@ -31,10 +31,15 @@ class Imgsizer_ext {
 				$width = $result[1];
 				$out_figure = str_replace($result[0], '', $out_figure);
 
-				// replace the new tags into the tagdata
-				$out_img = '{exp:imgsizer:size src="' . $src . '" width="' . $width . '"}
-				<img src="{sized}" width="{width}" height="{height}" alt="' . $alt_text . '" />
-				{/exp:imgsizer:size}';
+				if ($width == '') {
+					// no resizing, show regular image
+					$out_img = '<img src="' . $src . '" alt="' . $alt_text . '" />';
+				} else {
+					// replace the new tags into the tagdata
+					$out_img = '{exp:imgsizer:size src="' . $src . '" width="' . $width . '"}
+					<img src="{sized}" width="{width}" height="{height}" alt="' . $alt_text . '" />
+					{/exp:imgsizer:size}';
+				}
 				$out_figure = str_replace($img_tag, $out_img, $out_figure);
 				$tagdata = str_replace($figure_tag, $out_figure, $tagdata);
 			}

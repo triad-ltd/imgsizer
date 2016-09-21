@@ -1,6 +1,6 @@
 var imgsizer_default_width = 250;
 var imgsizer_default_link_title = 'Click Here';
-var imgsizer_width_message = 'Enter width in pixels';
+var imgsizer_width_message = 'Enter width in pixels\r\nLeave blank to use original image width';
 
 function ImgSizerOverlay($editor) {
 	this.$current = null;
@@ -124,9 +124,9 @@ WysiHat.addButton('imgsizer_rte', {
 						|| data.mime_type == 'image/png') {
 						var alt_text = prompt('Enter alt text (optional)', '');
 						var width = prompt(imgsizer_width_message, imgsizer_default_width);
-						if (width == '') width = imgsizer_default_width;
+
 						var src = data.thumb_path;
-						if (src == '') src = data.path;
+						if (width == '' || src == '') src = data.path;
 
 						$out = $('<figure />', {
 								'class': 'imgsizer-figure',
