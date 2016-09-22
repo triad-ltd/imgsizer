@@ -37,7 +37,7 @@ class Imgsizer_ext {
 					$out_img = '<img src="' . $src . '" alt="' . $alt_text . '" />';
 				} else {
 					// replace the new tags into the tagdata
-					$out_img = '{exp:imgsizer:size src="' . $src . '" width="' . $width . '"}
+					$out_img = '{exp:imgsizer:size src="' . $src . '" width="' . $width . '" quality="75"}
 					<img src="{sized}" width="{width}" height="{height}" alt="' . $alt_text . '" />
 					{/exp:imgsizer:size}';
 				}
