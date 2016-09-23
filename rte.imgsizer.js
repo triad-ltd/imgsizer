@@ -15,24 +15,25 @@ function ImgSizerOverlay($editor) {
 ImgSizerOverlay.prototype = {
 	_actions: function() {
 		var foo = this;
-
+		var curr = this.$current;
 		return {
 			delete: function() {
-				foo.$current.detach();
+				curr.detach();
 			},
 			float_left: function() {
-				foo.$current.css({'float': 'left', 'text-align': ''});
+				curr.css({'float': 'left', 'text-align': ''});
 			},
 			float_right: function() {
-				foo.$current.css({'float': 'right', 'text-align': ''});
+				curr.css({'float': 'right', 'text-align': ''});
 			},
 			float_none: function() {
-				foo.$current.css({'float': 'none', 'text-align': 'center'});
+				curr.css({'float': 'none', 'text-align': 'center'});
 			},
 			resize: function() {
-				var width = prompt(imgsizer_width_message, foo.$current.children('img').css('width').replace('px',''));
-				foo.$current.attr('data-width', width);
-				foo.$current.children('img').css('width', width);
+				var width = prompt(imgsizer_width_message, curr.children('img').css('width').replace('px',''));
+				foo.$editor.focus();
+				curr.attr('data-width', width);
+				curr.children('img').css('width', width);
 			}
 		}
 	},
