@@ -4,8 +4,6 @@ class Imgsizer {
 
     function __construct() { $this->init(); }
 
-    function Imgsizer() { $this->init(); } // EE2 support
-
     function calculateSize() {
         // get dimensions and mime type
         $sizePath = reduce_double_slashes($this->settings['root_path'] . '/' . $this->settings['size_src']);
