@@ -7,11 +7,12 @@ class Imgsizer {
     function calculateSize() {
         // get dimensions and mime type
         $sizePath = reduce_double_slashes($this->settings['root_path'] . '/' . $this->settings['size_src']);
-        
+
         try {
             $size = getimagesize($sizePath);
         } catch (Exception $exception) {
-            // Add some sort of logging, perhaps ee()->TMPL->log_item()
+			ee()->TMPL->log_item("ImageSizer Error: Unable to read image size ($sizePath)");
+			return false;
         }
 
         $this->input['width'] = $size[0];
