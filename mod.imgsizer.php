@@ -1,26 +1,20 @@
-<?php if (!defined('BASEPATH')) exit('No direct script access allowed');
-
-$plugin_info = array( // EE2 support
-    'pi_author' => 'Roger Hughes, David Rencher, Christian Maloney, Stephen Sweetland',
-    'pi_author_url' => 'http://clicked.me.uk/',
-    'pi_description' => 'Image resizer - resize images and create placeholders',
-    'pi_name' => 'ImageSizer',
-    'pi_usage' => Imgsizer::usage(),
-    'pi_version' => '4.0.2',
-);
+<?php  if ( ! defined('BASEPATH')) exit('No direct script access allowed');
 
 class Imgsizer {
 
     function __construct() { $this->init(); }
 
-    function Imgsizer() { $this->init(); } // EE2 support
-
     function calculateSize() {
         // get dimensions and mime type
         $sizePath = reduce_double_slashes($this->settings['root_path'] . '/' . $this->settings['size_src']);
-        if (!$size = @getimagesize($sizePath)) {
-            return false;
+
+        try {
+            $size = getimagesize($sizePath);
+        } catch (Exception $exception) {
+			ee()->TMPL->log_item("ImageSizer Error: Unable to read image size ($sizePath)");
+			return false;
         }
+
         $this->input['width'] = $size[0];
         $this->input['height'] = $size[1];
         $this->input['mimetype'] = $size[2];
@@ -46,17 +40,14 @@ class Imgsizer {
     }
 
     function error($err) {
-        $this->EE->TMPL->log_item("ImageSizer Error: " . $err);
-        return $this->EE->TMPL->no_results();
+        ee()->TMPL->log_item("ImageSizer Error: " . $err);
+        return ee()->TMPL->no_results();
     }
 
     function init() {
-        $this->EE = get_instance();
-
         $this->input = array();
         $this->output = array();
         $this->settings = array();
-
 
         // set document root folder
         if (array_key_exists('DOCUMENT_ROOT', $_ENV)) {
@@ -68,36 +59,35 @@ class Imgsizer {
         // set cache path
         // tag value first (if present), then config value (if present), then default
         $this->settings['cache_path'] = $this->settings['root_path'] . '/images/imgsizer';
-        if ($this->EE->config->item('imgsizer_cache_path') != false) {
-            $this->settings['cache_path'] = $this->EE->config->item('imgsizer_cache_path');
+        if (ee()->config->item('imgsizer_cache_path') != false) {
+            $this->settings['cache_path'] = ee()->config->item('imgsizer_cache_path');
         }
-        if ($this->EE->TMPL->fetch_param('cache_path') != '') {
-            $this->settings['cache_path'] = $this->EE->TMPL->fetch_param('cache_path');
+        if (ee()->TMPL->fetch_param('cache_path') != '') {
+            $this->settings['cache_path'] = ee()->TMPL->fetch_param('cache_path');
         }
 
         // set cache url
         $this->settings['cache_url'] = '/images/imgsizer';
-        if ($this->EE->config->item('imgsizer_cache_url') != false) {
-            $this->settings['cache_url'] = $this->EE->config->item('imgsizer_cache_url');
+        if (ee()->config->item('imgsizer_cache_url') != false) {
+            $this->settings['cache_url'] = ee()->config->item('imgsizer_cache_url');
         }
-        if ($this->EE->TMPL->fetch_param('cache_url') != '') {
-            $this->settings['cache_url'] = $this->EE->TMPL->fetch_param('cache_url');
+        if (ee()->TMPL->fetch_param('cache_url') != '') {
+            $this->settings['cache_url'] = ee()->TMPL->fetch_param('cache_url');
         }
-
 
         // fetch vars from the tag
-        $this->settings['color'] = (!$this->EE->TMPL->fetch_param('color')) ? '000000' : $this->EE->TMPL->fetch_param('color');
+        $this->settings['color'] = (!ee()->TMPL->fetch_param('color')) ? '000000' : ee()->TMPL->fetch_param('color');
         $this->settings['color'] = str_replace('#', '', $this->settings['color']);
 
-        $this->settings['height'] = (!$this->EE->TMPL->fetch_param('height')) ? false : $this->EE->TMPL->fetch_param('height');
+        $this->settings['height'] = (!ee()->TMPL->fetch_param('height')) ? false : ee()->TMPL->fetch_param('height');
 
-        $this->settings['quality'] = (!$this->EE->TMPL->fetch_param('quality')) ? 65 : $this->EE->TMPL->fetch_param('quality');
+        $this->settings['quality'] = (!ee()->TMPL->fetch_param('quality')) ? 65 : ee()->TMPL->fetch_param('quality');
 
-        $this->settings['src'] = (!$this->EE->TMPL->fetch_param('src')) ? false : rawurldecode($this->EE->TMPL->fetch_param('src'));
+        $this->settings['src'] = (!ee()->TMPL->fetch_param('src')) ? false : rawurldecode(ee()->TMPL->fetch_param('src'));
 
-        $this->settings['size_src'] = (!$this->EE->TMPL->fetch_param('size_src')) ? $this->EE->TMPL->fetch_param('src') : $this->EE->TMPL->fetch_param('size_src');
+        $this->settings['size_src'] = (!ee()->TMPL->fetch_param('size_src')) ? ee()->TMPL->fetch_param('src') : ee()->TMPL->fetch_param('size_src');
 
-        $this->settings['width'] = (!$this->EE->TMPL->fetch_param('width')) ? false : $this->EE->TMPL->fetch_param('width');
+        $this->settings['width'] = (!ee()->TMPL->fetch_param('width')) ? false : ee()->TMPL->fetch_param('width');
 
         if($this->settings['size_src'] != '') {
             if (!file_exists(reduce_double_slashes($this->settings['root_path'] . '/' . $this->settings['size_src']))) {
@@ -107,20 +97,20 @@ class Imgsizer {
     }
 
     function output() {
-        $tagdata = $this->EE->TMPL->tagdata;
+        $tagdata = ee()->TMPL->tagdata;
 
         if ($tagdata) {
-            foreach($this->EE->TMPL->var_single as $key => $val) {
+            foreach(ee()->TMPL->var_single as $key => $val) {
                 switch ($val) {
                     case "url":
                     case "sized":
-                        $tagdata = $this->EE->TMPL->swap_var_single($val, $this->output['url'], $tagdata);
+                        $tagdata = ee()->TMPL->swap_var_single($val, $this->output['url'], $tagdata);
                         break;
                     case "width":
-                        $tagdata = $this->EE->TMPL->swap_var_single($val, $this->output['width'], $tagdata);
+                        $tagdata = ee()->TMPL->swap_var_single($val, $this->output['width'], $tagdata);
                         break;
                     case "height":
-                        $tagdata = $this->EE->TMPL->swap_var_single($val, $this->output['height'], $tagdata);
+                        $tagdata = ee()->TMPL->swap_var_single($val, $this->output['height'], $tagdata);
                         break;
                 }
             }
@@ -134,12 +124,12 @@ class Imgsizer {
         $this->output['passthrough'] = '';
 
         foreach(array('alt','class','id','style','title') as $var) {
-            if ($this->EE->TMPL->fetch_param($var)) {
-                $this->output['passthrough'].= ' '.$var.'="' . $this->EE->TMP->fetch_param($var) . '"';
+            if (ee()->TMPL->fetch_param($var)) {
+                $this->output['passthrough'].= ' '.$var.'="' . ee()->TMP->fetch_param($var) . '"';
             }
         }
 
-        $this->output['passthrough'] .= (!$this->EE->TMPL->fetch_param('passthrough')) ? '' : ' '.$this->EE->TMPL->fetch_param('passthrough');
+        $this->output['passthrough'] .= (!ee()->TMPL->fetch_param('passthrough')) ? '' : ' '.ee()->TMPL->fetch_param('passthrough');
     }
 
     function placeholder() {

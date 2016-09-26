@@ -1,15 +1,19 @@
 The ImageSizer plugin will resize any JPG, GIF or PNG image to the size specified
 and cache the resized image to the cache folder.
 
-It can also output a placeholder image appropriately scaled which is ideal for lazy-loading situation.
-
+It can also output a placeholder image appropriately scaled which is ideal for
+lazy-loading situation.
 
 # History
+Originally from [http://devot-ee.com/add-ons/image-sizer](http://devot-ee.com/add-ons/image-sizer)
+and then forked from [https://github.com/ctmaloney/imgsizer](https://github.com/ctmaloney/imgsizer)
 
-Originally from [http://devot-ee.com/add-ons/image-sizer](http://devot-ee.com/add-ons/image-sizer) and then forked from [https://github.com/ctmaloney/imgsizer](https://github.com/ctmaloney/imgsizer)
+## Versions
+EE3 - [Latest Release](https://github.com/meatpaste/imgsizer/releases/latest)
+
+EE2 - [4.0.2](https://github.com/meatpaste/imgsizer/releases/tag/4.0.2)
 
 ## The Tags
-
 Resize an image and output the resized path in your own HTML:
 
 ```
@@ -26,7 +30,6 @@ Produce a placeholder using a full sized image to calculate proportions:
 ```
 
 ## Parameters
-
 - 'alt' - (string) pass through value for output image tag
 - 'cache_path' - (string) physical path to the cache folder
 - 'cache_url' - (string) absolute url to the cache folder
@@ -46,6 +49,23 @@ Produce a placeholder using a full sized image to calculate proportions:
 - 'sized' - (string) output url of cached image
 - 'width' - (integer) output width of image
 
-## Troubleshooting:
 
-All error messages are logged in the Template Parsing Log.  If you have no output, or unexpected output, enable the Template Parsing Log in your Output and Debugging Preferences. If you are still stuck please raise an issue using the [GitHub Issues page](https://github.com/meatpaste/imgsizer/issues/)
+#The RTE Button (EE3 Only)
+Development of this feature has been sponsored by [Triad. Think Creative](http://triad.uk.com)
+
+Installation automatically disables the built in RTE upload button and replaces it
+with an Imgsizer button using the same icon. The button allows inserting
+of Gif/Jpeg/PNG files with a special class which automatically swaps in Imgsizer
+when the entry is displayed. The thumbnail of the image is displayed in the RTE
+for speed.
+
+Hovering over the image in the RTE shows buttons for
+floating left and right as well as changing of the width and deleting.
+
+Any other file types will display a hyperlink when selected in the file chooser.
+
+## Troubleshooting:
+All error messages are logged in the Template Parsing Log.  If you have no output,
+or unexpected output, enable the Template Parsing Log in your Output and Debugging
+Preferences. If you are still stuck please raise an issue using the
+[GitHub Issues page](https://github.com/meatpaste/imgsizer/issues/)
