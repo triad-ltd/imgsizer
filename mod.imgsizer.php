@@ -125,7 +125,7 @@ class Imgsizer {
 
         foreach(array('alt','class','id','style','title') as $var) {
             if (ee()->TMPL->fetch_param($var)) {
-                $this->output['passthrough'].= ' '.$var.'="' . ee()->TMP->fetch_param($var) . '"';
+                $this->output['passthrough'].= ' '.$var.'="' . ee()->TMPL->fetch_param($var) . '"';
             }
         }
 
