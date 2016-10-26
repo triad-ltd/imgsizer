@@ -22,12 +22,15 @@ ImgSizerOverlay.prototype = {
 			},
 			float_left: function() {
 				curr.css({'float': 'left', 'text-align': ''});
+				$(curr).removeClass().addClass('rte_left');
 			},
 			float_right: function() {
 				curr.css({'float': 'right', 'text-align': ''});
+				$(curr).removeClass().addClass('rte_right');
 			},
 			float_none: function() {
 				curr.css({'float': 'none', 'text-align': 'center'});
+				$(curr).removeClass().addClass('rte_center');
 			},
 			resize: function() {
 				var width = prompt(imgsizer_width_message, curr.children('img').css('width').replace('px',''));
