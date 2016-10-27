@@ -11,7 +11,7 @@ class Imgsizer {
         try {
             $size = getimagesize($sizePath);
         } catch (Exception $exception) {
-			ee()->TMPL->log_item("ImageSizer Error: Unable to read image size ($sizePath)");
+			ee()->TMPL->log_item("ImgSizer Error: Unable to read image size ($sizePath)");
 			return false;
         }
 
@@ -40,7 +40,7 @@ class Imgsizer {
     }
 
     function error($err) {
-        ee()->TMPL->log_item("ImageSizer Error: " . $err);
+        ee()->TMPL->log_item("ImgSizer Error: " . $err);
         return ee()->TMPL->no_results();
     }
 
@@ -91,7 +91,7 @@ class Imgsizer {
 
         if($this->settings['size_src'] != '') {
             if (!file_exists(reduce_double_slashes($this->settings['root_path'] . '/' . $this->settings['size_src']))) {
-                return $this->error("Can't read size source file.");
+                return $this->error("Can't read size source file. " . $this->settings['size_src']);
             }
         }
     }
@@ -164,12 +164,16 @@ class Imgsizer {
         $this->output['path'] = reduce_double_slashes($this->settings['cache_path'] . '/placeholders/');
         if (!is_dir($this->output['path'])) {
             if (!mkdir($this->output['path'], 0777, true)) {
-                return $this->error("Unable to create placeholder cache folder");
+                return $this->error("Unable to create placeholder cache folder " . $this->settings['cache_path'] . '/placeholders/');
             }
         }
 
         // create placeholder if it doesn't exist already
-        if (!file_exists($this->output['path'] . $this->output['filename'])) {
+        $ph_path = $this->output['path'] . $this->output['filename'];
+        if (!file_exists($ph_path)) {
+        	if (!touch($ph_path)) {
+				return $this->error("Unable to create placeholder file " . $ph_path);
+			}
             $ph = imagecreate($this->output['width'], $this->output['height']);
             imagecolorallocate(
                 $ph,
@@ -206,7 +210,7 @@ class Imgsizer {
         $this->output['url'] = reduce_double_slashes($this->settings['cache_url'] . '/' . $inf['dirname'] . '/' . $this->output['filename']);
         if (!is_dir($this->output['path'])) {
             if (!mkdir($this->output['path'], 0777, true)) {
-                return $this->error("Unable to create cache folder");
+                return $this->error("Unable to create cache folder " . $this->output['path']);
             }
         }
 
@@ -215,9 +219,11 @@ class Imgsizer {
         }
 
         // check cache
-        if (!file_exists($this->output['path'] . $this->output['filename']) ||
-            filemtime($this->output['path'] . $this->output['filename']) < filemtime($inputPath) ) {
-
+        $img_path = $this->output['path'] . $this->output['filename'];
+        if (!file_exists($img_path) || filemtime($img_path) < filemtime($inputPath) ) {
+        	if (!touch($img_path)) {
+				return $this->error("Unable to create output file " . $img_path);
+			}
             // perform resize/crop
             switch ($this->input['mimetype']) {
                 case IMAGETYPE_GIF:
@@ -230,7 +236,7 @@ class Imgsizer {
                     $inImage = imagecreatefrompng($inputPath);
                     break;
                 default:
-                    return $this->error("Unhandled mime type");
+                    return $this->error("Unhandled mime type " . $this->input['mimetype']);
             }
 
             $outImage = imagecreatetruecolor($this->output['width'], $this->output['height']);
@@ -241,15 +247,18 @@ class Imgsizer {
             // save to disk
             switch ($this->input['mimetype']) {
                 case IMAGETYPE_GIF:
-                    imagegif($outImage, $this->output['path'] . $this->output['filename']);
+                    imagegif($outImage, $img_path);
                     break;
                 case IMAGETYPE_JPEG:
-                    imagejpeg($outImage, $this->output['path'] . $this->output['filename'], $this->settings['quality']);
+                    imagejpeg($outImage, $img_path, $this->settings['quality']);
                     break;
                 case IMAGETYPE_PNG:
-                    imagepng($outImage, $this->output['path'] . $this->output['filename']);
+                    imagepng($outImage, $img_path);
                     break;
             }
+
+            // set modified time to that of the source file
+            touch($img_path, filemtime($inputPath));
 
         }
 
