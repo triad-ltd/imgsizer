@@ -1,7 +1,8 @@
 var imgsizer_default_width = 250;
 var imgsizer_default_link_title = 'Click Here';
 var imgsizer_width_message = 'Enter width in pixels\r\nLeave blank to use original image width';
-
+var imgsizer_hyperlink_message = 'Enter the URL to link to';
+var href;
 function ImgSizerOverlay($editor) {
 	this.$current = null;
 	this.$editor = $editor;
@@ -32,11 +33,32 @@ ImgSizerOverlay.prototype = {
 				curr.css({'float': 'none', 'text-align': 'center'});
 				$(curr).removeClass().addClass('rte_center');
 			},
+			hyperlink: function() {
+				// var href = '';
+
+				if (curr.children('a').length > 0) {
+					href = curr.children('a').href;
+				}
+
+				href = prompt(imgsizer_hyperlink_message, curr.children('a').attr('href'));
+
+				if (href != '') {
+					if ($('a', curr).length == 0) {
+						curr.wrapInner("<a href='" + href + "' target='_blank'></a>");
+					} else {
+						$('a', curr).attr('href', href);
+					}
+				} else {
+					if ($('a', curr).length > 0) {
+						$('img', curr).unwrap();
+					}
+				}
+			},
 			resize: function() {
-				var width = prompt(imgsizer_width_message, curr.children('img').css('width').replace('px',''));
+				var width = prompt(imgsizer_width_message, $('img', curr).css('width').replace('px',''));
 				foo.$editor.focus();
 				curr.attr('data-width', width);
-				curr.children('img').css('width', width);
+				$('img', curr).css('width', width);
 			}
 		}
 	},
@@ -46,6 +68,7 @@ ImgSizerOverlay.prototype = {
 			.append(this._create_button('float_none', '&#xf07e;'))
 			.append(this._create_button('float_right', '&#xf178;'))
 			.append(this._create_button('resize', '&#xf0b2;'))
+			.append(this._create_button('hyperlink', '&#xf0c1;'))
 			.append(this._create_button('delete', '&#xf1f8;'))
 	},
 	_bind_toolbar: function() {
