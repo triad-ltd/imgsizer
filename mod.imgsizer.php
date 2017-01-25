@@ -18,24 +18,32 @@ class Imgsizer {
         $this->input['width'] = $size[0];
         $this->input['height'] = $size[1];
         $this->input['mimetype'] = $size[2];
+        $this->input['ratio'] = $size[1] / $size[0];
+        $this->output['crop'] = false;
+        $this->output['ratio'] = $this->input['ratio'];
 
         // dimension calculation
         if ($this->settings['width'] && !$this->settings['height']) {
-            $ratio = $this->input['height'] / $this->input['width'];
-            $this->output['height'] = round($this->settings['width'] * $ratio);
+            $this->output['height'] = round($this->settings['width'] * $this->output['ratio']);
             $this->output['width'] = $this->settings['width'];
         }
 
         if ($this->settings['height'] && !$this->settings['width']) {
-            $ratio = $this->input['width'] / $this->input['height'];
             $this->output['height'] = $this->settings['height'];
-            $this->output['width'] = round($this->settings['height'] * $ratio);
+            $this->output['width'] = round($this->settings['height'] * $this->output['ratio']);
         }
 
         if ($this->settings['height'] && $this->settings['width']) {
             $this->output['height'] = $this->settings['height'];
             $this->output['width'] = $this->settings['width'];
+            $this->output['ratio'] = $this->output['height'] / $this->output['width'];
         }
+
+        // is a crop needed?
+        if ($this->output['ratio'] != $this->input['ratio']) {
+            $this->output['crop'] = true;
+        }
+
         return true;
     }
 
@@ -81,6 +89,7 @@ class Imgsizer {
 
         $this->settings['height'] = (!ee()->TMPL->fetch_param('height')) ? false : ee()->TMPL->fetch_param('height');
 
+
         $this->settings['quality'] = (!ee()->TMPL->fetch_param('quality')) ? 65 : ee()->TMPL->fetch_param('quality');
 
         $this->settings['src'] = (!ee()->TMPL->fetch_param('src')) ? false : rawurldecode(ee()->TMPL->fetch_param('src'));
@@ -88,6 +97,9 @@ class Imgsizer {
         $this->settings['size_src'] = (!ee()->TMPL->fetch_param('size_src')) ? ee()->TMPL->fetch_param('src') : ee()->TMPL->fetch_param('size_src');
 
         $this->settings['width'] = (!ee()->TMPL->fetch_param('width')) ? false : ee()->TMPL->fetch_param('width');
+
+        // do you want imgsizer to create a new thumbnail? cached="no"
+        $this->settings['cached'] = (!ee()->TMPL->fetch_param('cached')) ? 'yes' : ee()->TMPL->fetch_param('cached');
 
         if($this->settings['size_src'] != '') {
             if (!file_exists(reduce_double_slashes($this->settings['root_path'] . '/' . $this->settings['size_src']))) {
@@ -218,9 +230,12 @@ class Imgsizer {
             return $this->error("Unable to calculate image size");
         }
 
+        // should we ignore any cache, and recreate?
+        $force_create = $this->settings['cached'] == 'no' ? true : false;
+
         // check cache
         $img_path = $this->output['path'] . $this->output['filename'];
-        if (!file_exists($img_path) || filemtime($img_path) < filemtime($inputPath) ) {
+        if (!file_exists($img_path) || filemtime($img_path) < filemtime($inputPath) || $force_create) {
         	if (!touch($img_path)) {
 				return $this->error("Unable to create output file " . $img_path);
 			}
@@ -239,10 +254,35 @@ class Imgsizer {
                     return $this->error("Unhandled mime type " . $this->input['mimetype']);
             }
 
+
             $outImage = imagecreatetruecolor($this->output['width'], $this->output['height']);
             imagealphablending($outImage, false);
             imagesavealpha($outImage, true);
-            imagecopyresampled($outImage, $inImage, 0, 0, 0, 0, $this->output['width'], $this->output['height'], $this->input['width'], $this->input['height']);
+
+            // in & out coordinates
+            $ix = 0; $iy = 0;
+
+            // ok, now handle some cropping.
+            if ($this->output['crop']) {
+                $req_width = $this->output['width'];
+                $req_height = $this->output['height'];
+
+                $center_req_x = $req_width / 2;
+                $center_req_y = $req_height / 2;
+
+                if ($this->output['ratio'] < $this->input['ratio']) {
+                    // need to crop the y to prevent stretching
+                    $this->output['height'] = ceil($this->output['width'] * $this->input['ratio']);
+                    $iy = ceil(($this->output['height'] - $req_height) / 2) * 1.3;
+                } else {
+                    // need to crop the x to prevent stretching
+                    $this->output['width'] = ceil($this->output['height'] / $this->input['ratio']);
+                    $ix = ceil(($this->output['width'] - $req_width) / 2);
+                }
+            }
+
+            // imagecopyresampled($outImage, $inImage, 0, 0, $ix, $iy, $this->output['width'], $this->output['height'], $this->input['width'], $this->input['height']);
+            imagecopyresampled($outImage, $inImage, 0, 0, $ix, $iy, $this->output['width'], $this->output['height'], $this->input['width'], $this->input['height']);
 
             // save to disk
             switch ($this->input['mimetype']) {
