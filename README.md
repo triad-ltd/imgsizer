@@ -7,6 +7,9 @@ lazy-loading situation.
 # History
 Originally from [http://devot-ee.com/add-ons/image-sizer](http://devot-ee.com/add-ons/image-sizer)
 and then forked from [https://github.com/ctmaloney/imgsizer](https://github.com/ctmaloney/imgsizer)
+and then forked form [https://github.com/meatpaste/imgsizer](https://github.com/meatpaste/imgsizer)
+
+Special note: This stage would not have been reached without the special efforts of @meatpaste.
 
 ## Versions
 EE3 - [Latest Release](https://github.com/meatpaste/imgsizer/releases/latest)
