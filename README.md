@@ -16,6 +16,7 @@ Special note: This stage would not have been reached without the special efforts
 Include a new parameter in your config path for imgsizer to place its cached files.
 
 $config['imgsizer_cache_path'] = $_SERVER['DOCUMENT_ROOT'].'/cdn/imgsizer';
+$config['imgsizer_cache_url'] = '/cdn/imgsizer/';
 
 ## Versions
 EE3 / EE4 - [Latest Release](https://github.com/meatpaste/imgsizer/releases/latest)
