@@ -11,8 +11,14 @@ and *then* forked form [https://github.com/meatpaste/imgsizer](https://github.co
 
 Special note: This stage would not have been reached without the special efforts of [https://github.com/meatpaste](@meatpaste).
 
+## Setup
+
+Include a new parameter in your config path for imgsizer to place its cached files.
+
+$config['imgsizer_cache_path'] = $_SERVER['DOCUMENT_ROOT'].'/cdn/imgsizer';
+
 ## Versions
-EE3 - [Latest Release](https://github.com/meatpaste/imgsizer/releases/latest)
+EE3 / EE4 - [Latest Release](https://github.com/meatpaste/imgsizer/releases/latest)
 
 EE2 - [4.0.2](https://github.com/meatpaste/imgsizer/releases/tag/4.0.2)
 
@@ -21,8 +27,8 @@ Resize an image and output the resized path in your own HTML:
 
 ```
 {exp:imgsizer:size src="/images/news/moped.jpg" width="100"}
-  <img src="{sized}" width="{width}" height="{height}" />
-  <div style="background-image:url({sized}); width:{width}px; height:{height}px;"></div>
+  <img src="{url}" width="{width}" height="{height}" />
+  <div style="background-image:url({url}); width:{width}px; height:{height}px;"></div>
 {/exp:imgsizer:size}
 ```
 
@@ -34,6 +40,7 @@ Produce a placeholder using a full sized image to calculate proportions:
 
 ## Parameters
 - 'alt' - (string) pass through value for output image tag
+- 'cached' - (string) yes / no  - use cached copy or recreate ('no' will create cached item)
 - 'cache_path' - (string) physical path to the cache folder
 - 'cache_url' - (string) absolute url to the cache folder
 - 'class' - (string) pass through value for output image tag
@@ -49,7 +56,7 @@ Produce a placeholder using a full sized image to calculate proportions:
 
 #Variables
 - 'height' - (integer) output height of image
-- 'sized' - (string) output url of cached image
+- 'url' - (string) output url of cached image
 - 'width' - (integer) output width of image
 
 
