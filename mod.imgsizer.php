@@ -1,18 +1,23 @@
-<?php  if ( ! defined('BASEPATH')) exit('No direct script access allowed');
+<?php if (!defined('BASEPATH')) {
+    exit('No direct script access allowed');
+}
 
-class Imgsizer {
+class Imgsizer
+{
 
-    function __construct() { $this->init(); }
+    public function __construct()
+    {$this->init();}
 
-    function calculateSize() {
+    public function calculateSize()
+    {
         // get dimensions and mime type
         $sizePath = reduce_double_slashes($this->settings['root_path'] . '/' . $this->settings['size_src']);
 
         try {
             $size = getimagesize($sizePath);
         } catch (Exception $exception) {
-			ee()->TMPL->log_item("ImgSizer Error: Unable to read image size ($sizePath)");
-			return false;
+            ee()->TMPL->log_item("ImgSizer Error: Unable to read image size ($sizePath)");
+            return false;
         }
 
         $this->input['width'] = $size[0];
@@ -47,12 +52,14 @@ class Imgsizer {
         return true;
     }
 
-    function error($err) {
+    public function error($err)
+    {
         ee()->TMPL->log_item("ImgSizer Error: " . $err);
         return ee()->TMPL->no_results();
     }
 
-    function init() {
+    public function init()
+    {
         $this->input = array();
         $this->output = array();
         $this->settings = array();
@@ -89,30 +96,31 @@ class Imgsizer {
 
         $this->settings['height'] = (!ee()->TMPL->fetch_param('height')) ? false : ee()->TMPL->fetch_param('height');
 
-
         $this->settings['quality'] = (!ee()->TMPL->fetch_param('quality')) ? 65 : ee()->TMPL->fetch_param('quality');
 
         $this->settings['src'] = (!ee()->TMPL->fetch_param('src')) ? false : rawurldecode(ee()->TMPL->fetch_param('src'));
 
         $this->settings['size_src'] = (!ee()->TMPL->fetch_param('size_src')) ? ee()->TMPL->fetch_param('src') : ee()->TMPL->fetch_param('size_src');
+        $this->settings['size_src'] = urldecode($this->settings['size_src']);
 
         $this->settings['width'] = (!ee()->TMPL->fetch_param('width')) ? false : ee()->TMPL->fetch_param('width');
 
         // do you want imgsizer to create a new thumbnail? cached="no"
         $this->settings['cached'] = (!ee()->TMPL->fetch_param('cached')) ? 'yes' : ee()->TMPL->fetch_param('cached');
 
-        if($this->settings['size_src'] != '') {
+        if ($this->settings['size_src'] != '') {
             if (!file_exists(reduce_double_slashes($this->settings['root_path'] . '/' . $this->settings['size_src']))) {
                 return $this->error("Can't read size source file. " . $this->settings['size_src']);
             }
         }
     }
 
-    function output() {
+    public function output()
+    {
         $tagdata = ee()->TMPL->tagdata;
 
         if ($tagdata) {
-            foreach(ee()->TMPL->var_single as $key => $val) {
+            foreach (ee()->TMPL->var_single as $key => $val) {
                 switch ($val) {
                     case "url":
                     case "sized":
@@ -128,23 +136,25 @@ class Imgsizer {
             }
             return $tagdata;
         } else {
-            return '<img src="' . $this->output['url'] . '" width="'.$this->output['width'].'" height="'.$this->output['height'].'" ' . $this->passthrough() . '/>';
+            return '<img src="' . $this->output['url'] . '" width="' . $this->output['width'] . '" height="' . $this->output['height'] . '" ' . $this->passthrough() . '/>';
         }
     }
 
-    function passthrough() {
+    public function passthrough()
+    {
         $this->output['passthrough'] = '';
 
-        foreach(array('alt','class','id','style','title') as $var) {
+        foreach (array('alt', 'class', 'id', 'style', 'title') as $var) {
             if (ee()->TMPL->fetch_param($var)) {
-                $this->output['passthrough'].= ' '.$var.'="' . ee()->TMPL->fetch_param($var) . '"';
+                $this->output['passthrough'] .= ' ' . $var . '="' . ee()->TMPL->fetch_param($var) . '"';
             }
         }
 
-        $this->output['passthrough'] .= (!ee()->TMPL->fetch_param('passthrough')) ? '' : ' '.ee()->TMPL->fetch_param('passthrough');
+        $this->output['passthrough'] .= (!ee()->TMPL->fetch_param('passthrough')) ? '' : ' ' . ee()->TMPL->fetch_param('passthrough');
     }
 
-    function placeholder() {
+    public function placeholder()
+    {
         // validation
         if ($this->settings['size_src']) {
             if (!$this->settings['width'] && !$this->settings['height']) {
@@ -183,16 +193,16 @@ class Imgsizer {
         // create placeholder if it doesn't exist already
         $ph_path = $this->output['path'] . $this->output['filename'];
         if (!file_exists($ph_path)) {
-        	if (!touch($ph_path)) {
-				return $this->error("Unable to create placeholder file " . $ph_path);
-			}
+            if (!touch($ph_path)) {
+                return $this->error("Unable to create placeholder file " . $ph_path);
+            }
             $ph = imagecreate($this->output['width'], $this->output['height']);
             imagecolorallocate(
                 $ph,
-                hexdec(substr($this->settings['color'],0,2)),
-                hexdec(substr($this->settings['color'],2,2)),
-                hexdec(substr($this->settings['color'],4,2))
-                );
+                hexdec(substr($this->settings['color'], 0, 2)),
+                hexdec(substr($this->settings['color'], 2, 2)),
+                hexdec(substr($this->settings['color'], 4, 2))
+            );
             imagepng($ph, $this->output['path'] . $this->output['filename']);
             imagedestroy($ph);
         }
@@ -200,7 +210,8 @@ class Imgsizer {
         return $this->output();
     }
 
-    function size() {
+    public function size()
+    {
         // validation
         if ($this->settings['src'] == false) {
             return $this->error("Parameter 'src' is required");
@@ -218,7 +229,7 @@ class Imgsizer {
         // file format [width]-[height]-[quality]-[filename]
         $inf = pathinfo($this->settings['src']);
         $this->output['path'] = reduce_double_slashes($this->settings['cache_path'] . '/' . $inf['dirname'] . '/');
-        $this->output['filename'] = $this->settings['width'].'-'.$this->settings['height'].'-'.$this->settings['quality'].'-'.$inf['basename'];
+        $this->output['filename'] = $this->settings['width'] . '-' . $this->settings['height'] . '-' . $this->settings['quality'] . '-' . $inf['basename'];
         $this->output['url'] = reduce_double_slashes($this->settings['cache_url'] . '/' . $inf['dirname'] . '/' . $this->output['filename']);
         if (!is_dir($this->output['path'])) {
             if (!mkdir($this->output['path'], 0777, true)) {
@@ -236,9 +247,9 @@ class Imgsizer {
         // check cache
         $img_path = $this->output['path'] . $this->output['filename'];
         if (!file_exists($img_path) || filemtime($img_path) < filemtime($inputPath) || $force_create) {
-        	if (!touch($img_path)) {
-				return $this->error("Unable to create output file " . $img_path);
-			}
+            if (!touch($img_path)) {
+                return $this->error("Unable to create output file " . $img_path);
+            }
             // perform resize/crop
             switch ($this->input['mimetype']) {
                 case IMAGETYPE_GIF:
@@ -254,13 +265,13 @@ class Imgsizer {
                     return $this->error("Unhandled mime type " . $this->input['mimetype']);
             }
 
-
             $outImage = imagecreatetruecolor($this->output['width'], $this->output['height']);
             imagealphablending($outImage, false);
             imagesavealpha($outImage, true);
 
             // in & out coordinates
-            $ix = 0; $iy = 0;
+            $ix = 0;
+            $iy = 0;
 
             // ok, now handle some cropping.
             if ($this->output['crop']) {
@@ -305,6 +316,7 @@ class Imgsizer {
         return $this->output();
     }
 
-    static function usage() { return file_get_contents(__DIR__.'/README.md'); }
+    public static function usage()
+    {return file_get_contents(__DIR__ . '/README.md');}
 
 }
